@@ -1,0 +1,6 @@
+#!/usr/bin/jq -rf
+
+select(.targets[].architecture == "aarch64") |
+select(.features|all(. != "secure-boot")) |
+select(.mapping.device == "flash") |
+.mapping.executable.filename

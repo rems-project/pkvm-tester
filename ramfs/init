@@ -1,0 +1,41 @@
+#!/bin/sh
+
+/bin/busybox --install -s
+export PATH="$PATH:/usr/bin:/bin:/usr/sbin:/sbin"
+
+[ -c /dev/null ] || mknod -m 666 /dev/null c 1 3
+
+mount -t sysfs -o noexec,nosuid,nodev sysfs /sys
+mount -t debugfs debugfs /sys/kernel/debug
+mount -t devtmpfs -o exec,nosuid,mode=0755,size=2M devtmpfs /dev 2>/dev/null \
+  || mount -t tmpfs -o exec,nosuid,mode=0755,size=2M tmpfs /dev
+
+[ -c /dev/kmsg ] || mknod -m 660 /dev/kmsg c 1 11
+
+mount -t proc -o noexec,nosuid,nodev proc /proc
+
+[ -c /dev/ptmx ] || mknod -m 666 /dev/ptmx c 5 2
+
+[ -d /dev/pts ] || mkdir -m 755 /dev/pts
+mount -t devpts -o gid=5,mode=0620,noexec,nosuid devpts /dev/pts
+
+[ -d /dev/shm ] || mkdir /dev/shm
+mount -t tmpfs -o nodev,nosuid,noexec shm /dev/shm
+
+
+set -- $(cat /proc/cmdline)
+
+echo -e "\n\e[1mStarting pKVM tester.\e[0m\n"
+
+cd payload
+
+for prog in ./*.run; do
+  if [[ -x $prog ]]; then
+    echo -e "- \e[1mrunning ${prog}:\e[0m"
+    $prog || exit 1
+  fi
+done
+
+echo -e "\n\e[1mAll tests successful.\e[0m\n"
+
+reboot -n -f

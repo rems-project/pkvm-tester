@@ -1,0 +1,30 @@
+#!/bin/bash
+set -e
+
+cpus=1 mem=2G
+
+root=$(dirname $0)/../_build
+efidisk=${root}/efi.img
+vardisk=${root}/var.img
+
+params=(
+  --name "pkvm-test-runner"
+  --machine virt-8.1,virtualization=true,gic-version=3
+  --smp ${cpus} -m ${mem} --cpu cortex-a72
+  --drive if=pflash,file=${efidisk},format=raw,readonly=on
+  --drive if=pflash,file=${vardisk},format=raw
+  --nographic
+  --no-reboot
+  --initrd ${root}/initramfs.img
+)
+append=(
+  panic=-1
+  quiet
+  kvm-arm.mode=protected
+)
+
+[[ -v DEBUG ]] && params+=(-S --gdb tcp::${DEBUG:-1234})
+
+make -C $(dirname 0) images
+
+exec qemu-system-aarch64 "${params[@]}" --append "${append[*]}" $@

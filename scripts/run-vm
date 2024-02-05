@@ -9,7 +9,7 @@ vardisk=${root}/var.img
 
 params=(
   --name "pkvm-test-runner"
-  --machine virt-8.1,virtualization=true,gic-version=3
+  --machine virt,virtualization=true,gic-version=3
   --smp ${cpus} -m ${mem} --cpu cortex-a72
   --drive if=pflash,file=${efidisk},format=raw,readonly=on
   --drive if=pflash,file=${vardisk},format=raw

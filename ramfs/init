@@ -29,7 +29,7 @@ echo -e "\n\e[1mStarting pKVM tester.\e[0m\n"
 
 cd payload
 
-for prog in ./*.run; do
+for prog in ./*; do
   if [[ -x $prog ]]; then
     echo -e "- \e[1mrunning ${prog}:\e[0m"
     $prog || exit 1

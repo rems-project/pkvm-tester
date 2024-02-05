@@ -1,19 +1,18 @@
 # pKVM tester #
 
-This repository contains a bare-bones Linux "distribution", meant to run pKVM
+This repository contains a bare-bones Linux boot environment, meant to run pKVM
 tests.
 
-The distribution runs entirely from the initramfs image (normally provided
-alongside the kernel to both real systems and Qemu). It does almost no system
-bring-up. After boot, it runs a given set of executables, and then halts the
-system.
+It runs entirely from the initramfs image (normally provided alongside the
+kernel to both real systems and Qemu). It does almost no system bring-up. After
+boot, it runs a given set of executables, and then halts the system.
 
 ## Executables ##
 
-Executables can be added to the `payload/` directory. The image will run all the
-executable files with the `.run` extension.
+Executables can be added to the `payload/` directory. The image will run all
+executables in that directory.
 
-All executables must be either statically compiled aarch64 binaries, or shell
+Executables must be either statically compiled aarch64 binaries, or shell
 scripts compatible with `busybox ash`.
 
 ## Running ##

@@ -1,6 +1,14 @@
-#!/usr/bin/jq -rf
+#!/bin/bash
 
-select(.targets[].architecture == "aarch64") |
-select(.features|all(. != "secure-boot")) |
-select(.mapping.device == "flash") |
-.mapping.executable.filename
+qemus=(
+  /usr/share/qemu
+  /opt/homebrew/Cellar/qemu
+)
+query='select(.targets[].architecture == "aarch64") |
+       select(.features|all(. != "secure-boot")) |
+       select(.mapping.device == "flash") |
+       .mapping.executable.filename'
+
+qemus0=()
+for q in "${qemus[@]}"; do [[ -d $q ]] && qemus0+=$q; done
+jq -r "$query" $(find "${qemus0[@]}" -name "*.json")

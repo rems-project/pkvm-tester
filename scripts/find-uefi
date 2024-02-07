@@ -11,4 +11,4 @@ query='select(.targets[].architecture == "aarch64") |
 
 qemus0=()
 for q in "${qemus[@]}"; do [[ -d $q ]] && qemus0+=$q; done
-jq -r "$query" $(find "${qemus0[@]}" -name "*.json")
+jq -r "$query" $(find "${qemus0[@]}" -path "*/firmware/*.json")

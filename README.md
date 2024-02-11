@@ -29,6 +29,6 @@ If Qemu is not instelled system-wide, or to use a different UEFI image, run
 
 ## Dependencies ##
 
-Requires `make`, `jq`, a few Linux utilities which are usually installed, a Qemu
+Requires `zsh`, `make`, `jq`, a few Linux utilities which are usually installed, a Qemu
 installation providing `qemu-system-aarch64`, and an UEFI compatible with it.
 These are all provided by distribution packages on regular Linux distributions.

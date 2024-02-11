@@ -1,30 +1,31 @@
-#!/bin/bash
+#!/bin/zsh
 set -e
 
 cpus=1 mem=2G
 
-root=$(dirname $0)/../_build
+root=${0:h:h}/_build
 efidisk=${root}/efi.img
 vardisk=${root}/var.img
 
 params=(
   --name "pkvm-test-runner"
   --machine virt,virtualization=true,gic-version=3
-  --smp ${cpus} -m ${mem} --cpu cortex-a72
+  --smp $cpus -m $mem --cpu cortex-a72
   --drive if=pflash,file=${efidisk},format=raw,readonly=on
   --drive if=pflash,file=${vardisk},format=raw
   --nographic
-  --no-reboot
+  --no-reboot  # Exit instead of rebooting
   --initrd ${root}/initramfs.img
 )
+# linux/Documentation/admin-guide/kernel-parameters.txt:
 append=(
-  panic=-1
+  panic=-1  # Reboot immediately.
   quiet
   kvm-arm.mode=protected
 )
 
 [[ -v DEBUG ]] && params+=(-S --gdb tcp::${DEBUG:-1234})
 
-make -C $(dirname 0) images
+make -C ${0:h:h} images
 
-exec qemu-system-aarch64 "${params[@]}" --append "${append[*]}" $@
+exec qemu-system-aarch64 $params --append "$append" $@

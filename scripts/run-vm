@@ -17,11 +17,13 @@ params=(
   --no-reboot  # Exit instead of rebooting
   --initrd ${root}/initramfs.img
 )
+
 # linux/Documentation/admin-guide/kernel-parameters.txt:
 append=(
   panic=-1  # Reboot immediately.
-  quiet
-  kvm-arm.mode=protected
+  nokaslr   # Disable address space layout randomization.
+  quiet     # Suppress kernel outputs.
+  kvm-arm.mode=protected  # pKVM.
 )
 
 [[ -v DEBUG ]] && params+=(-S --gdb tcp::${DEBUG:-1234})

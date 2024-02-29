@@ -1,0 +1,15 @@
+#!/bin/zsh
+PAYLOAD_PATH="${0:a:h}/../payload"
+
+if ! type "curl" > /dev/null; then
+  echo "ERROR: please install 'curl'."
+  exit 1
+fi
+
+if [ -f "$PAYLOAD_PATH/pkvm-test" ]; then
+  echo "ERROR: file 'pkvm-test' already exists in payload/ - Aborting instead of overwriting."
+  exit 1
+fi
+
+curl -o "$PAYLOAD_PATH/pkvm-test" 'https://www.cl.cam.ac.uk/~km569/prebuilt_pkvm-test/pkvm-test'
+chmod +x "$PAYLOAD_PATH/pkvm-test"

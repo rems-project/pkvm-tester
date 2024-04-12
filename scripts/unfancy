@@ -1,0 +1,4 @@
+#!/bin/sh
+#
+# Remove ANSI escapes, making raw screen dumps closer to plain text.
+sed -e 's/\r$//' -e 's/\x1b\[[0-9;=]*[mhHJ]//g' $@

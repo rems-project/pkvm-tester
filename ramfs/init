@@ -22,6 +22,8 @@ mount -t devpts -o gid=5,mode=0620,noexec,nosuid devpts /dev/pts
 [ -d /dev/shm ] || mkdir /dev/shm
 mount -t tmpfs -o nodev,nosuid,noexec shm /dev/shm
 
+[ -d /output ] || mkdir /output
+mount -t 9p -o trans=virtio,version=9p2000.L output /output
 
 set -- $(cat /proc/cmdline)
 

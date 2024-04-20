@@ -1,0 +1,12 @@
+#!/bin/zsh
+set -e
+
+if [ $# -eq 0 ]; then
+  LOG="${0:h:h}/output/$(ls -1 output | tail -n 1)/log"
+else
+  LOG=$1
+fi
+
+echo "["
+grep TRACING $LOG | sed -e "s/^.*TRACING //" -e "$ ! s/$/,/"
+echo "]"

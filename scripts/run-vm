@@ -1,9 +1,15 @@
 #!/bin/zsh
 set -e
 
+if [[ $(uname) == "Darwin" ]]; then
+  DATE=$(date -Iseconds)
+else
+  DATE=$(date --iso-8601=seconds)
+fi
+
 cpus=1 mem=2G
 
-out="${0:h:h}/output/$(uname -n)-$(date --iso-8601=seconds)"
+out="${0:h:h}/output/$(uname -n)-$DATE"
 root=${0:h:h}/_build
 efidisk=${root}/efi.img
 vardisk=${root}/var.img

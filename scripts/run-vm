@@ -41,19 +41,29 @@ make -C ${0:h:h} images
 
 qemu-system-aarch64 $params --append "$append" $@ | tee "$out/log"
 
-function kernel {
+function kernel-argument {
   while (($#@ > 0)); do
     [[ $1 == --kernel ]] && echo ${2:A} && return
     shift
   done
 }
+image=$(kernel-argument $@)
 
-image=$(kernel $@)
-if [[ -f $out/kcov-addr ]]; then
-  vmlinux=${image:h:h:h:h}/vmlinux
-  if [[ -f $vmlinux ]]; then
-    addr2line -e $vmlinux < $out/kcov-addr |sort -u > $out/kcov
+function warn {
+  echo -ne '\e[1;33mWarning:\e[0m ' 1>&2
+  echo $@ 1>&2
+}
+if [[ -f $out/kcov ]]; then
+  if which addr2lcov &>/dev/null; then
+    vmlinux=${image:h:h:h:h:A}/vmlinux
+    src=${out:A}/kcov
+    dst=${out:A}/tests.info
+    if [[ -f $vmlinux ]]; then
+      addr2lcov --exe $vmlinux < $out/kcov > $out/tests.info
+    else
+      warn "Cannot find vmlinux. Cannot resolve KCOV coverage."
+    fi
   else
-    echo "Cannot find vmlinux. KCOV addresses cannot be resolved."
+    warn "Cannot find ‘addr2lcov’. Please install it to resolve KCOV coverage."
   fi
 fi

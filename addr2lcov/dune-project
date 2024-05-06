@@ -1,0 +1,18 @@
+(lang dune 3.15)
+(name addr2lcov)
+
+(generate_opam_files)
+
+(source (github rems-project/pkvm-tester))
+(authors "dk505@cl.cam.ac.uk")
+(maintainers "dk505@cl.cam.ac.uk")
+
+(package
+ (name addr2lcov)
+ (synopsis "Convert KCOV address dumps to LCOV .info files")
+ (depends
+  (ocaml (>= 5.1.0))
+  (fmt (>= 0.9.0))
+  (fpath (>= 0.7.3))
+  (cmdliner (>= 1.2.0))
+  (logs (>= 0.7.0))))

@@ -1,0 +1,4 @@
+(executable
+  (name addr2lcov)
+  (public_name addr2lcov)
+  (libraries json unix fmt fmt.tty fpath cmdliner logs.fmt logs.cli))

@@ -1,4 +1,6 @@
 
+let rec last = function [] -> None | [x] -> Some x | _::xs -> last xs
+
 (** LLVM symbolizer's idea of symbols. *)
 module Symbols = struct
   [@@@ warning "-69"]
@@ -9,19 +11,22 @@ module Symbols = struct
   }
   type address = { address: int64; modulename: string; symbols: symbol list }
 
+  type opts = { demangle: string -> string; unfold_inlines: bool }
+  let default_opts = { demangle = Fun.id; unfold_inlines = true }
+
   open Json.Q
+
   let int64_ =
-    let f s =
-      try Scanf.sscanf s "0x%Lx%!" (fun x -> Ok x)
-      with | End_of_file | Scanf.Scan_failure _ ->
-        Error (`Msg ("expected 0x-hex found: " ^ s)) in
+    let f s = try Scanf.sscanf s "0x%Lx%!" (fun x -> Ok x) with
+    | End_of_file | Scanf.Scan_failure _ -> Error (`Msg ("expected 0x-hex found: " ^ s))
+    in
     map f string
   let int64, int64_o  = to_err int64_, map Result.to_option int64_
   let path = map Fpath.(fun s -> normalize (v s)) string
-  let symbol demangle =
+  let symbol opts =
     obj (fun column discriminator filename functionname line startaddress startfilename startline ->
       { column; discriminator; filename; line; startaddress; startfilename; startline
-      ; functionname = demangle functionname})
+      ; functionname = opts.demangle functionname})
     |> mem "Column" int
     |> mem "Discriminator" int
     |> mem "FileName" path
@@ -30,30 +35,35 @@ module Symbols = struct
     |> mem "StartAddress" int64_o
     |> mem "StartFileName" path
     |> mem "StartLine" int
-  let address demangle = 
+  let address opts = 
     obj (fun address modulename symbols -> { address; modulename; symbols })
     |> mem "Address" int64
     |> mem "ModuleName" string
-    |> mem "Symbol" (array (symbol demangle))
-  let of_json ?(demangle = Fun.id) json =
-    match Json.Q.query (address demangle) json with
+    |> mem "Symbol" (array (symbol opts))
+  let of_json ?(opts = default_opts) json =
+    match Json.Q.query (address opts) json with
     | Error (`Msg e) -> Fmt.failwith "%s: %s" e (Json.to_string json)
     | Ok v -> v
 
   open Lcov
-  let to_info (addr, count) =
-    let sym_to_info { filename; functionname = func; line; startline; startfilename; _} =
-      (* per-function count *)
-      func_hit ~file:startfilename ~startline ~func count ++
-      (* LCOV needs the first line of the function to have _something_ *)
-      (if (filename <> startfilename || line <> startline) then
-        line_hit ~file:startfilename ~line:startline count
-       else no_info) ++
-      (* per-line count, if the line was found *)
-      (match line with 0 -> no_info | _ -> line_hit ~file:filename ~line:line count)
-    in
-    List.fold_left (fun i s -> i ++ sym_to_info s) no_info addr.symbols
-  let to_infos = Iters.fold (fun i a -> i ++ to_info a) no_info
+
+  let sym_to_info { filename; functionname = func; line; startline; startfilename; _} count  =
+    (* per-function count *)
+    func_hit ~file:startfilename ~startline ~func count ++
+    (* LCOV needs the first line of the function to have _something_ *)
+    (if (filename <> startfilename || line <> startline) then
+      line_hit ~file:startfilename ~line:startline count
+      else no_info) ++
+    (* per-line count, if the line was found *)
+    (match line with 0 -> no_info | _ -> line_hit ~file:filename ~line:line count)
+  let to_info ?(opts = default_opts) (addr, count) =
+    match opts.unfold_inlines with
+    | true ->
+        List.fold_left (fun i s -> i ++ sym_to_info s count) no_info addr.symbols
+    | false ->
+        last addr.symbols
+        |> Option.fold ~none:no_info ~some:(fun s -> sym_to_info s count)
+  let to_infos ?opts = Iters.fold (fun i a -> i ++ to_info ?opts a) no_info
 end
 
 let bracket ~release v f =
@@ -83,13 +93,13 @@ module Read = struct
           | n -> go (suff ^ Bytes.sub_string ibuf 0 n) it
     in
     Iters.of_iter (go "")
-  let llvm_symbols ?demangle ic =
-    jsons ic |> Iters.map (Symbols.of_json ?demangle)
+  let llvm_symbols ?opts ic =
+    jsons ic |> Iters.map (Symbols.of_json ?opts)
   let kcov ic =
-    lines ic |> Iters.map @@ fun line ->
-      try Scanf.sscanf line "0x%Lx %d%!" (fun a b -> a, b)
-      with End_of_file | Scanf.Scan_failure _ ->
-        Fmt.invalid_arg "KCOV: expecting ‘0x%%Lx %%d’ got: %s" line
+    let of_line line = try Scanf.sscanf line "0x%Lx %d%!" (fun a b -> a, b) with
+    | End_of_file | Scanf.Scan_failure _ -> Fmt.invalid_arg "KCOV: expecting ‘0x%%Lx %%d’ got: %s" line
+    in
+    lines ic |> Iters.map of_line
 end
 
 let pp_process_status ppf = function
@@ -109,13 +119,13 @@ let strip_prefix ~prefix s =
 
 let demangle__kvm_nvhe = strip_prefix ~prefix:"__kvm_nvhe_" 
 
-let llvm_symbolizer ?demangle ~exe addrs = Iters.of_iter @@ fun it ->
+let llvm_symbolizer ?opts ~exe addrs = Iters.of_iter @@ fun it ->
   let ic, oc =
     Unix.open_process_args "llvm-symbolizer"
     [| "llvm-symbolizer"; "--output-style"; "JSON"; "--exe"; exe |]
   in
   let th = Domain.spawn @@ fun () ->
-    Iters.iter it (Read.llvm_symbols ?demangle ic) in
+    Iters.iter it (Read.llvm_symbols ?opts ic) in
   Fmt.pf (Format.formatter_of_out_channel oc) "@[<v>%a@]@."
     Fmt.(iter ~sep:cut Iters.iter (fmt "0x%Lx")) addrs;
   close_out oc;
@@ -127,20 +137,23 @@ module Amap = struct
   let find_def ~default k m = find_opt k m |> Option.value ~default
 end
 
-let addr2lcov ?demangle ~exe kcov =
+let addr2lcov ?opts ~exe kcov =
   let add m (addr, cnt) = Amap.(add addr (cnt + find_def addr m ~default:0)) m in
   let kmap = Iters.fold add Amap.empty kcov in
   let cover = Iters.(ii Amap.iter kmap |> map fst) in
-  llvm_symbolizer ?demangle ~exe cover
+  llvm_symbolizer ?opts ~exe cover
     |> Iters.map (fun s -> s, Amap.find s.Symbols.address kmap)
-    |> Symbols.to_infos
+    |> Symbols.to_infos ?opts
 
-let main ~exe ?out srcs =
+let main ?(inln = true) ~exe ?out srcs =
   let kcov = match srcs with
   | [] -> Read.kcov stdin
   | srcs -> Iters.(of_list srcs |> map (Fun.flip Read.in_file Read.kcov) |> join)
   in
-  let info = addr2lcov kcov ~exe ~demangle:demangle__kvm_nvhe in
+  let info = addr2lcov kcov ~exe ~opts:{
+    demangle = demangle__kvm_nvhe;
+    unfold_inlines = inln;
+  } in
   let pr ppf = Fmt.pf ppf "%a@." Lcov.pp_info info in
   match out with
   | None -> pr Fmt.stdout
@@ -167,7 +180,7 @@ let term =
   let open Arg in
   let exe = required @@ opt (some non_dir_file) None @@ info ["exe"]
             ~docv:"OBJ"
-            ~doc:"Path to object file to analyse for symbols"
+            ~doc:"Path to object file to analyse for symbols."
   and out = value @@ opt (some string) None @@ info ["o"; "out"]
             ~docv:"TRACEFILE"
             ~doc:"Path to LCOV trace file (.info) to output. Outputs to stdout if missing." 
@@ -175,10 +188,14 @@ let term =
             ~docv:"KCOV"
             ~doc:"KCOV dump file(s) to convert. Any number of files can be \
                   given, as counts are aggregated. Inputs from stdin if missing."
+  and inln = value @@ opt bool true @@ info ["i"; "inlines"]
+             ~docv:"BOOL"
+             ~doc:"Attribute each hit to the stack of inlines ($(b,true)) or \
+                  just the outermost function ($(b,false))."
   in
-  Term.((fun exe src out -> main ~exe ?out src)
+  Term.((fun exe inln out -> main ~exe ?out ~inln)
     (* $$ (Logs.set_level ~all:true $$ Logs_cli.level ()) *)
-    $$ exe $ src $ out)
+    $$ exe $ inln $ out $ src)
 
 let _ =
   Fmt_tty.setup_std_outputs ();

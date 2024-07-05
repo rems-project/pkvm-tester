@@ -1,5 +1,8 @@
 #!/bin/sh
 
+NVHE_LOG="/sys/kernel/debug/nvhe.log"
+NVHE_LOGGER_GRACE=0.1
+
 /bin/busybox --install -s
 export PATH="$PATH:/usr/bin:/bin:/usr/sbin:/sbin"
 
@@ -27,10 +30,16 @@ mount -t 9p -o trans=virtio,version=9p2000.L output /output
 
 set -- $(cat /proc/cmdline)
 
+# Start the NVHE logger
+if [ -r $NVHE_LOG ]; then
+  cat < $NVHE_LOG > /output/nvhe.log &
+  NVHE_LOGGER=$!
+  echo -e "\nStarted NVHE logger."
+fi
+
+# Run the payloads
 echo -e "\n\e[1mStarting pKVM tester.\e[0m\n"
-
 cd payload
-
 for prog in ./*; do
   if [[ -x $prog ]]; then
     echo -e "- \e[1mrunning ${prog}:\e[0m"
@@ -40,8 +49,18 @@ for prog in ./*; do
     fi
   fi
 done
-
 echo -e "\n\e[1mAll tests successful.\e[0m\n"
+
+# Kill the NVHE logger
+if [ -n "$NVHE_LOGGER" ]; then
+  if ! kill -0 $NVHE_LOGGER &> /dev/null; then
+    echo -e "\n\e[1;31mWe lost the logging process.\e[0m\n"
+  else
+    echo "Shutting down NVHE logger..."
+    sleep $NVHE_LOGGER_GRACE
+    kill -SIGTERM $NVHE_LOGGER
+  fi
+fi
 
 sync -f /output
 reboot -n -f

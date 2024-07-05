@@ -39,7 +39,7 @@ append=(
 mkdir -p $out
 make -C ${0:h:h} images
 
-qemu-system-aarch64 $params --append "$append" $@ | tee "$out/log"
+qemu-system-aarch64 $params --append "$append" $@ | tee "$out/serial"
 
 function kernel {
   while (($#@ > 0)); do

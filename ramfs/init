@@ -1,7 +1,7 @@
 #!/bin/sh
 
-NVHE_LOG="/sys/kernel/debug/nvhe.log"
-NVHE_LOGGER_GRACE=0.1
+
+NVHE_LOGGER_GRACE=0
 
 /bin/busybox --install -s
 export PATH="$PATH:/usr/bin:/bin:/usr/sbin:/sbin"
@@ -31,8 +31,8 @@ mount -t 9p -o trans=virtio,version=9p2000.L output /output
 set -- $(cat /proc/cmdline)
 
 # Start the NVHE logger
-if [ -r $NVHE_LOG ]; then
-  cat < $NVHE_LOG > /output/nvhe.log &
+if [ -r /sys/kernel/debug/nvhe.log ]; then
+  cat < /sys/kernel/debug/nvhe.log > /output/nvhe.log &
   NVHE_LOGGER=$!
   echo -e "\nStarted NVHE logger."
 fi
@@ -50,6 +50,11 @@ for prog in ./*; do
   fi
 done
 echo -e "\n\e[1mAll tests successful.\e[0m\n"
+
+# Save the final coverage info.
+if [ -d /sys/kernel/debug/gcov_nvhe ]; then
+  tar cpzf /output/gcov.tar.gz -C /sys/kernel/debug/gcov_nvhe .
+fi
 
 # Kill the NVHE logger
 if [ -n "$NVHE_LOGGER" ]; then

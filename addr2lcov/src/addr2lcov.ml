@@ -112,10 +112,9 @@ let process_success = function
 | st -> Fmt.failwith "process: %a" pp_process_status st
 
 let strip_prefix ~prefix s =
-  if String.starts_with ~prefix s then
-    let n = String.length prefix in
-    String.(sub s n (length s - n))
-  else s
+  if not (String.starts_with ~prefix s) then s else
+  let n = String.length prefix in
+  String.(sub s n (length s - n))
 
 let demangle__kvm_nvhe = strip_prefix ~prefix:"__kvm_nvhe_" 
 
@@ -137,20 +136,21 @@ module Amap = struct
   let find_def ~default k m = find_opt k m |> Option.value ~default
 end
 
-let addr2lcov ?opts ~exe kcov =
+let addr2lcov ?opts ?(kcov_offset = 0L) ~exe kcov =
   let add m (addr, cnt) = Amap.(add addr (cnt + find_def addr m ~default:0)) m in
+  let kcov = Iters.map (fun (a, c) -> Int64.add kcov_offset a, c) kcov in
   let kmap = Iters.fold add Amap.empty kcov in
   let cover = Iters.(ii Amap.iter kmap |> map fst) in
   llvm_symbolizer ?opts ~exe cover
     |> Iters.map (fun s -> s, Amap.find s.Symbols.address kmap)
     |> Symbols.to_infos ?opts
 
-let main ?(inln = true) ~exe ?out srcs =
+let main ?(inln = true) ~exe ?kcov_offset ?out srcs =
   let kcov = match srcs with
   | [] -> Read.kcov stdin
   | srcs -> Iters.(of_list srcs |> map (Fun.flip Read.in_file Read.kcov) |> join)
   in
-  let info = addr2lcov kcov ~exe ~opts:{
+  let info = addr2lcov kcov ?kcov_offset ~exe ~opts:{
     demangle = demangle__kvm_nvhe;
     unfold_inlines = inln;
   } in
@@ -192,10 +192,13 @@ let term =
              ~docv:"BOOL"
              ~doc:"Attribute each hit to the stack of inlines ($(b,true)) or \
                   just the outermost function ($(b,false))."
+  and off = value @@ opt int64 (-4L) @@ info ["offset"]
+            ~docv:"OFFSET"
+            ~doc:"Shift addresses emitted by KCOV by this amount."
   in
-  Term.((fun exe inln out -> main ~exe ?out ~inln)
+  Term.((fun exe inln off out -> main ~exe ~kcov_offset:off ?out ~inln)
     (* $$ (Logs.set_level ~all:true $$ Logs_cli.level ()) *)
-    $$ exe $ inln $ out $ src)
+    $$ exe $ inln $ off $ out $ src)
 
 let _ =
   Fmt_tty.setup_std_outputs ();

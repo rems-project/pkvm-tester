@@ -1,0 +1,26 @@
+#!/bin/zsh
+set -e
+
+# This finds all addresses that could appear in KCOV logs, which is a superset
+# of what any given KCOV run can produce. Useful for understanding what is
+# actually instrumented and therefore what _could_ be seen, since KCOV cannot
+# emit zero-occurrence locations.
+#
+# We do this by using radare (r2) to find locations of all calls to the PC
+# recording function.
+#
+# Note: the results are underwhelmingly sparse.
+
+[[ -f $1 ]] || { echo "No file given" >&2; exit 1; }
+r2args=(
+  -e bin.relocs.apply=true
+  -e bin.cache=true
+  -qq
+  -c 'af@@ sym.__kvm_nvhe_*'
+  -c 'axtj@ sym.__kvm_nvhe___sanitizer_cov_trace_pc' 
+)
+addrs=( $(
+  r2 $r2args $1 2>/dev/null | jq '.[]|select(.type == "CALL")|.from'
+) )
+
+printf '0x%x\n' $addrs

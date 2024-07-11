@@ -2,7 +2,7 @@
 set -e
 
 if [ $# -eq 0 ]; then
-  LOG="${0:h:h}/output/$(ls -1 output | tail -n 1)/log"
+  LOG="${0:h:h}/output/$(ls -1 output | tail -n 1)/serial"
 else
   LOG=$1
 fi

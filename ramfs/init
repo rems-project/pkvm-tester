@@ -2,6 +2,9 @@
 
 
 NVHE_LOGGER_GRACE=0
+GCOV="/sys/kernel/debug/gcov_nvhe"
+
+## init
 
 /bin/busybox --install -s
 export PATH="$PATH:/usr/bin:/bin:/usr/sbin:/sbin"
@@ -30,11 +33,18 @@ mount -t 9p -o trans=virtio,version=9p2000.L output /output
 
 set -- $(cat /proc/cmdline)
 
+## payloads
+
 # Start the NVHE logger
 if [ -r /sys/kernel/debug/nvhe.log ]; then
   cat < /sys/kernel/debug/nvhe.log > /output/nvhe.log &
   NVHE_LOGGER=$!
   echo -e "\nStarted NVHE logger."
+fi
+
+if [ -d $GCOV ]; then
+  tar cpzf /output/gcov-boot.tar.gz . -C $GCOV --exclude=reset
+  echo > ${GCOV}/reset
 fi
 
 # Run the payloads
@@ -51,9 +61,8 @@ for prog in ./*; do
 done
 echo -e "\n\e[1mAll tests successful.\e[0m\n"
 
-# Save the final coverage info.
-if [ -d /sys/kernel/debug/gcov_nvhe ]; then
-  tar cpzf /output/gcov.tar.gz -C /sys/kernel/debug/gcov_nvhe .
+if [ -d $GCOV ]; then
+  tar cpzf /output/gcov-payload.tar.gz . -C $GCOV --exclude=reset
 fi
 
 # Kill the NVHE logger

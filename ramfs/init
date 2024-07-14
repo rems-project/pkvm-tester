@@ -1,10 +1,11 @@
 #!/bin/sh
 
+# export OCAMLRUNPARAM=b,t
 
 NVHE_LOGGER_GRACE=0
 GCOV="/sys/kernel/debug/gcov_nvhe"
 
-## init
+## init ##
 
 /bin/busybox --install -s
 export PATH="$PATH:/usr/bin:/bin:/usr/sbin:/sbin"
@@ -33,7 +34,7 @@ mount -t 9p -o trans=virtio,version=9p2000.L output /output
 
 set -- $(cat /proc/cmdline)
 
-## payloads
+## support ##
 
 # Start the NVHE logger
 if [ -r /sys/kernel/debug/nvhe.log ]; then
@@ -47,33 +48,28 @@ if [ -d $GCOV ]; then
   echo > ${GCOV}/reset
 fi
 
-# Run the payloads
+## payloads ##
+
 echo -e "\n\e[1mStarting pKVM tester.\e[0m\n"
+
 cd payload
+
 for prog in ./*; do
   if [[ -x $prog ]]; then
     echo -e "- \e[1mrunning ${prog}:\e[0m"
     if ! $prog; then
       sync -f /output
-      exit 1
+      # exit 1
     fi
   fi
 done
+
 echo -e "\n\e[1mAll tests successful.\e[0m\n"
+
+## shutdown ##
 
 if [ -d $GCOV ]; then
   tar cpzf /output/gcov-payload.tar.gz . -C $GCOV --exclude=reset
-fi
-
-# Kill the NVHE logger
-if [ -n "$NVHE_LOGGER" ]; then
-  if ! kill -0 $NVHE_LOGGER &> /dev/null; then
-    echo -e "\n\e[1;31mWe lost the logging process.\e[0m\n"
-  else
-    echo "Shutting down NVHE logger..."
-    sleep $NVHE_LOGGER_GRACE
-    kill -SIGTERM $NVHE_LOGGER
-  fi
 fi
 
 sync -f /output

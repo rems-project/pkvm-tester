@@ -1,0 +1,37 @@
+#!/bin/zsh
+set -e
+
+# Usage: ${0} OUTPUT-DIR
+
+lcovargs=(
+  --gcov-tool=llvm-cov,gcov 
+  --capture --all 
+  --branch-coverage
+  -q
+)
+
+eecho() { echo $@ >&2; }
+output="$1"
+[[ -d $output ]] || { eecho "$output: not a dir"; exit 1; }
+[[ -x =lcov ]] || { eecho "Cannot find `lcov` — not installed?"; exit 1; }
+[[ -x =llvm-cov ]] || { eecho "Cannot find `llvm-cov` — not installed?"; exit 1; }
+
+gcovs=( $output/gcov-*.tar.gz(N) )
+(( $#gcovs == 0 )) && exit 0
+
+tmp=$(mktemp -d --suff="-gcov") || exit 127
+
+for gcov in $gcovs; do
+  echo "Capturing: ${gcov:t}"
+  dir=$tmp/${gcov:t:r:r}
+  mkdir $dir
+  tar xf $gcov -C $dir
+  links=( $dir/**/arch/arm64/**/*.c(@:A) )
+  base=$(sed -e 's:/arch/arm64/.*::' <<< $links[1])
+  lcov $lcovargs -d $dir -b $base -o ${gcov:r:r}.info
+done
+
+[[ -d $tmp ]] && rm -rf $tmp
+
+echo "Combining: aggregate.info"
+lcov -q --branch-coverage --add-tracefile=${^gcovs:r:r}.info -o $output/aggregate.info

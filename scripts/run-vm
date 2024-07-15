@@ -40,3 +40,6 @@ mkdir -p $out
 make -C ${0:h:h} images
 
 qemu-system-aarch64 $params --append "$append" $@ | tee "$out/serial"
+
+echo
+${0:h}/capture-coverage $out

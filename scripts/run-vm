@@ -9,8 +9,8 @@ fi
 
 cpus=1 mem=2G
 
-out="${0:h:h}/output/$(uname -n)-$DATE"
-root=${0:h:h}/_build
+out="${0:A:h:h}/output/$(uname -n)-$DATE"
+root=${0:A:h:h}/_build
 efidisk=${root}/efi.img
 vardisk=${root}/var.img
 
@@ -37,9 +37,9 @@ append=(
 [[ -v DEBUG ]] && params+=(-S --gdb tcp::${DEBUG:-1234})
 
 mkdir -p $out
-make -C ${0:h:h} images
+make -C ${0:A:h:h} images
 
 qemu-system-aarch64 $params --append "$append" $@ | tee "$out/serial"
 
 echo
-${0:h}/capture-coverage $out
+${0:A:h}/capture-coverage $out

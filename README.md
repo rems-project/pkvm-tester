@@ -21,8 +21,22 @@ Add any executables to `payload/`, and run `make`. This produces
 `_build/{var,efi,initramfs}.img` which can be used with Qemu. The kernel must be
 provided separately.
 
-Alternatively, just run `scripts/run-vm --kernel <KERNEL>`. This rebuilds the
-images and boots Qemu.
+Alternatively, just run `scripts/run-vm <KERNEL>`. This rebuilds the images and
+boots Qemu. The arg syntax of `run-vm` is:
+```bash
+run-vm KERNEL [ARG] [-- [QEMU-ARG]]
+```
+
+- `KERNEL` is the kernel to boot. Mandatory.
+- `ARG` can be:
+  + `--no-lcov|-C` — suppress LCOV capture
+  + `--tag|-T` — add tag to output dir name (repeats)
+- `QEMU-ARG` are passed to Qemu.
+
+For instance, to run `Image.v4` run on 8 cores, with no coverage, use:
+```bash
+run-vm Image.v4 --no-cov -- --smp 8
+```
 
 If Qemu is not instelled system-wide, or to use a different UEFI image, run
 `make UEFI=<IMAGE>` instead.
@@ -43,7 +57,9 @@ and it requires that the kernel build directory is accessible, and in the same
 state it was when the kernel was built. The coverage is stored in LCOV `.info`
 files in the output dir, and can be rendered as HTML with, for instance:
 
-> genhtml --branch-coverage /path/to/info /path/to/output/dir
+```bash
+genhtml --branch-coverage /path/to/info /path/to/output/dir
+```
 
 ## Dependencies ##
 

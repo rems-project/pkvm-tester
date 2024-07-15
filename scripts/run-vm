@@ -1,15 +1,29 @@
 #!/bin/zsh
 set -e
+zmodload zsh/zutil
 
-if [[ $(uname) == "Darwin" ]]; then
-  DATE=$(date -Iseconds)
-else
-  DATE=$(date --iso-8601=seconds)
-fi
+show-usage() {
+  echo "Usage: KERNEL [ARG [...]] [-- QEMU-ARG [...]]"
+  echo "The kernel image is mandatory."
+  echo
+  echo "ARG:"
+  echo "  -h|--help      This..."
+  echo "  -C|--no-cov    Suppress LCOV capture."
+  echo "  -T|--tag       Add tag to output dir name (repeats)."
+  echo
+  echo "QEMU-ARGs can be used to fine-tune Qemu."
+  exit 1
+}
 
-cpus=1 mem=2G
+zparseopts -D -F -E - {-help,h}=help {-tag,T}+:=tags {-no-cov,C}=ncov {-test,t}+:=tests || show-usage
+(( $#help > 0 )) && show-usage
+[[ -f $1 ]] && kernel=$1 && shift || show-usage
+[[ $1 == "--" ]] && shift
+tags=${${(pj:+:)${tags/(--tag|-T)/}}// /_}
 
-out="${0:A:h:h}/output/$(uname -n)-$DATE"
+cpus=1
+mem=2G
+out="${0:A:h:h}/output/$(uname -n)-$(date -Iseconds)${tags:+-$tags}"
 root=${0:A:h:h}/_build
 efidisk=${root}/efi.img
 vardisk=${root}/var.img
@@ -23,6 +37,7 @@ params=(
   --virtfs local,path=$out,mount_tag=output,security_model=none
   --nographic
   --no-reboot  # Exit instead of rebooting
+  --kernel $kernel
   --initrd ${root}/initramfs.img
 )
 
@@ -43,5 +58,4 @@ echo "$params" > $out/qemu-arguments
 make -C ${0:A:h:h} images
 qemu-system-aarch64 $params --append "$append" $@ | tee "$out/serial"
 
-echo
-${0:A:h}/capture-coverage $out
+(( $#ncov == 0 )) && echo && ${0:A:h}/capture-coverage $out

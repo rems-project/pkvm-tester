@@ -37,8 +37,10 @@ append=(
 [[ -v DEBUG ]] && params+=(-S --gdb tcp::${DEBUG:-1234})
 
 mkdir -p $out
-make -C ${0:A:h:h} images
+echo "$@" > $out/arguments
+echo "$params" > $out/qemu-arguments
 
+make -C ${0:A:h:h} images
 qemu-system-aarch64 $params --append "$append" $@ | tee "$out/serial"
 
 echo

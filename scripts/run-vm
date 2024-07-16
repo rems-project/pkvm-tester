@@ -59,3 +59,6 @@ make -C ${0:A:h:h} images
 qemu-system-aarch64 $params --append "$append" $@ | tee "$out/serial"
 
 (( $#ncov == 0 )) && echo && ${0:A:h}/capture-coverage $out
+
+echo
+echo -e '> \e]8;;file://'$out'\e\\'$out'\e]8;;\e\\'

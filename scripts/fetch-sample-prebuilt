@@ -1,15 +1,14 @@
 #!/bin/zsh
-PAYLOAD_PATH="${0:a:h}/../payload"
+set -e
 
-if ! type "curl" > /dev/null; then
-  echo "ERROR: please install 'curl'."
-  exit 1
-fi
+LATEST='https://github.com/rems-project/pkvm-proxy-ocaml/raw/binaries/d0ebc57.tar.zst'
 
-if [ -f "$PAYLOAD_PATH/pkvm-test" ]; then
-  echo "ERROR: file 'pkvm-test' already exists in payload/ - Aborting instead of overwriting."
-  exit 1
-fi
+PAYLOAD_PATH=${0:A:h}/../payload
+PAYLOAD_PATH=${PAYLOAD_PATH:a}
 
-curl -o "$PAYLOAD_PATH/pkvm-test" 'https://www.cl.cam.ac.uk/~km569/prebuilt_pkvm-test/pkvm-test'
-chmod +x "$PAYLOAD_PATH/pkvm-test"
+die() { echo $@ >&2; exit 1; }
+type "curl" > /dev/null || die "ERROR: please install 'curl'."
+tests=( $PAYLOAD_PATH/test_*(N) )
+(( $#tests > 0 )) && die "ERROR: refusing to overwrite tests in $PAYLOAD_PATH"
+
+curl -sL "$LATEST"|tar xvf - --zstd

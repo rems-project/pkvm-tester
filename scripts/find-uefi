@@ -2,8 +2,9 @@
 
 qemus=(
   '/usr/share/qemu'
-  '/usr/local/share/qemu'
   '/opt/homebrew/Cellar/qemu'
+  "$HOME/.nix-profile/share/qemu"
+  '/usr/local/share/qemu'
 )
 
 query='select(.targets[].architecture == "aarch64") |
@@ -11,4 +12,4 @@ query='select(.targets[].architecture == "aarch64") |
        select(.mapping.device == "flash") |
        .mapping.executable.filename'
 
-jq -r $query ${^qemus}/**/firmware/*.json(N)
+jq -r $query ${^qemus}/**/firmware/*.json(N) | tail -n1

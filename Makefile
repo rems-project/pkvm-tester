@@ -13,6 +13,7 @@ $(BUILD)/var.img:
 $(BUILD)/efi.img: $(UEFI)
 	@mkdir -p $(BUILD)
 	@cp $< $@
+	@chmod +rw $@
 	@truncate -s 64m $@
 
 $(BUILD)/initramfs.img: $(BUILD)/initramfs.root.img $(BUILD)/initramfs.exe.img

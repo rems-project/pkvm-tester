@@ -51,12 +51,13 @@ append=(
 
 [[ -v DEBUG ]] && params+=(-S --gdb tcp::${DEBUG:-1234})
 
+arguments=($params --append "$append" $@)
+
 mkdir -p $out
-echo "$@" > $out/arguments
-echo "$params" > $out/qemu-arguments
+echo $arguments > $out/arguments
 
 make -C ${0:A:h:h} images
-qemu-system-aarch64 $params --append "$append" $@ | tee "$out/serial"
+qemu-system-aarch64 $arguments | tee "$out/serial"
 
 (( $#ncov == 0 )) && echo && ${0:A:h}/capture-coverage $out
 

@@ -1,0 +1,25 @@
+#!/bin/zsh
+set -e
+
+# Quickly call genhtml on entire outputs
+
+show-usage() {
+  echo "Usage: [OPTIONS] DIR [DIR [...]]"
+  echo
+  echo "Produce HTML coverage reports from all *.info files in DIRs."
+  echo
+  echo "OPTIONS:"
+  echo "  -h|--help      This..."
+  echo "  -o|--output    Set output dir (default cdw)"
+  echo
+  exit 1
+}
+
+zparseopts -D -F -E - {o,-output}:=out || show-usage
+out=${${out[2]}:-.}
+
+for dir in $@; do
+  for info in $dir/*.info; do
+    genhtml --branch-coverage $info -o $out/${dir:t}/${info:t:r}
+  done
+done

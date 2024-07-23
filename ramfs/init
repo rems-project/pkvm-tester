@@ -44,7 +44,7 @@ if [ -r /sys/kernel/debug/nvhe.log ]; then
 fi
 
 if [ -d $GCOV ]; then
-  tar cpzf /output/gcov-boot.tar.gz . -C $GCOV --exclude=reset
+  tar cpzf /output/gcov-00-boot.tar.gz . -C $GCOV --exclude=reset
   echo > ${GCOV}/reset
 fi
 
@@ -69,7 +69,7 @@ echo -e "\n\e[1mAll tests successful.\e[0m\n"
 ## shutdown ##
 
 if [ -d $GCOV ]; then
-  tar cpzf /output/gcov-payload.tar.gz . -C $GCOV --exclude=reset
+  tar cpzf /output/gcov-01-payload.tar.gz . -C $GCOV --exclude=reset
 fi
 
 sync -f /output

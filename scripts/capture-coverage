@@ -1,6 +1,16 @@
 #!/bin/zsh
 set -e
 
+# This is meant to be run right after executing tests.
+#
+# It consumes *.gcda files (produced during the run), and *.gcno files (produced
+# as part of the build), and produces lcov *.info files.
+#
+# Since the *.gcno must match the *.gcda, the build directory needs to be in the
+# same state it was when building the corresponding kernel — running make in
+# between can generate *.gcno files incompatible with the *.gcda files that the
+# kernel produces.
+# 
 # Usage: ${0} OUTPUT-DIR
 
 lcovargs=(
@@ -34,4 +44,4 @@ done
 [[ -d $tmp ]] && rm -rf $tmp
 
 echo "Combining: aggregate.info"
-lcov -q --branch-coverage --add-tracefile=${^gcovs:r:r}.info -o $output/aggregate.info
+lcov -q --branch-coverage --add-tracefile=${^gcovs:r:r}.info -o $output/gcov-99-aggregate.info

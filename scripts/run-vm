@@ -7,15 +7,16 @@ show-usage() {
   echo "The kernel image is mandatory."
   echo
   echo "ARG:"
-  echo "  -h|--help      This..."
-  echo "  -C|--no-cov    Suppress LCOV capture."
-  echo "  -T|--tag       Add tag to output dir name (repeats)."
+  echo "  -h|--help            This..."
+  echo "  -C|--no-cov          Suppress LCOV capture."
+  echo "  -T|--tag             Add tag to output dir name (repeats)."
+  echo "  -d|--debug [PORT]    Wait for GDB on tcp::PORT (default 1234)."
   echo
   echo "QEMU-ARGs can be used to fine-tune Qemu."
   exit 1
 }
 
-zparseopts -D -F -E - {-help,h}=help {-tag,T}+:=tags {-no-cov,C}=ncov {-test,t}+:=tests || show-usage
+zparseopts -D -F -E - {-help,h}=help {-tag,T}+:=tags {-no-cov,C}=ncov {-debug,d}::=debug {-test,t}+:=tests || show-usage
 (( $#help > 0 )) && show-usage
 [[ -f $1 ]] && kernel=$1 && shift || show-usage
 [[ $1 == "--" ]] && shift
@@ -41,6 +42,8 @@ params=(
   --initrd ${root}/initramfs.img
 )
 
+(( $#debug )) && params+=( -S --gdb tcp::${${${debug[1]/--debug}/-d}:-1234} )
+
 # linux/Documentation/admin-guide/kernel-parameters.txt:
 append=(
   panic=-1  # Reboot immediately.
@@ -48,8 +51,6 @@ append=(
   quiet     # Suppress kernel outputs.
   kvm-arm.mode=protected  # pKVM.
 )
-
-[[ -v DEBUG ]] && params+=(-S --gdb tcp::${DEBUG:-1234})
 
 arguments=($params --append "$append" $@)
 

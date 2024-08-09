@@ -29,8 +29,9 @@ run-vm KERNEL [ARG] [-- [QEMU-ARG]]
 
 - `KERNEL` is the kernel to boot. Mandatory.
 - `ARG` can be:
-  + `--no-lcov|-C` — suppress LCOV capture
-  + `--tag|-T` — add tag to output dir name (repeats)
+  + `-C|--no-lcov` — suppress LCOV capture
+  + `-T|--tag` — add tag to output dir name (repeats)
+  + `-d|--debug PORT` — wait for GDB on tcp::PORT (default 1234)"
 - `QEMU-ARG` are passed to Qemu.
 
 For instance, to run `Image.v4` run on 8 cores, with no coverage, use:

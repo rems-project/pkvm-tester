@@ -58,13 +58,14 @@ for prog in ./*; do
   if [[ -x $prog ]]; then
     echo -e "- \e[1mrunning ${prog}:\e[0m"
     if ! $prog; then
+      echo -e "\e[31mError running ${prog}.\e[0m\n"
       sync -f /output
-      # exit 1
+      reboot -n -f
     fi
   fi
 done
 
-echo -e "\n\e[1mAll tests successful.\e[0m\n"
+echo -e "\e[1mAll tests successful.\e[0m\n"
 
 ## shutdown ##
 

@@ -39,7 +39,7 @@ For instance, to run `Image.v4` run on 8 cores, with no coverage, use:
 run-vm Image.v4 --no-cov -- --smp 8
 ```
 
-If Qemu is not instelled system-wide, or to use a different UEFI image, run
+If Qemu is not installed system-wide, or to use a different UEFI image, run
 `make UEFI=<IMAGE>` instead.
 
 ## Output ##
@@ -52,7 +52,7 @@ the terminal output is captured as `serial`.
 If the kernel was built with EL2 GCOV coverage, the raw coverage data (`.gcda`
 files) is saved as archives in the output directory.
 
-After Qemu is exits, the raw coverage is immediately "captured" into LCOV info
+After Qemu exits, the raw coverage is immediately "captured" into LCOV info
 files. This requires the `lcov` and `llvm-cov` (part of `llvm`) executables;
 and it requires that the kernel build directory is accessible, and in the same
 state it was when the kernel was built. The coverage is stored in LCOV `.info`

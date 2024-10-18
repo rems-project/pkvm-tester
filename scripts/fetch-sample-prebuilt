@@ -1,7 +1,7 @@
 #!/bin/zsh
 set -e
 
-LATEST='https://github.com/rems-project/pkvm-proxy-ocaml/raw/binaries/fc8a4ec.tar.zst'
+LATEST='https://github.com/rems-project/pkvm-proxy-ocaml/raw/binaries/21f1281.tar.zst'
 
 PAYLOAD_PATH=${0:A:h}/../payload
 PAYLOAD_PATH=${PAYLOAD_PATH:a}

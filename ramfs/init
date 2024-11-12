@@ -36,6 +36,10 @@ set -- $(cat /proc/cmdline)
 
 ## support ##
 
+function up { echo "time ${1}: $(cut -f1 -d' ' < /proc/uptime)"; }
+
+up "boot"
+
 # Start the NVHE logger
 if [ -r /sys/kernel/debug/nvhe.log ]; then
   cat < /sys/kernel/debug/nvhe.log > /output/nvhe.log &
@@ -49,6 +53,8 @@ if [ -d $GCOV ]; then
 fi
 
 ## payloads ##
+
+up "inits"
 
 echo -e "\n\e[1mStarting pKVM tester.\e[0m\n"
 
@@ -68,6 +74,8 @@ done
 echo -e "\e[1mAll tests successful.\e[0m\n"
 
 ## shutdown ##
+
+up "tests"
 
 if [ -d $GCOV ]; then
   tar cpzf /output/gcov-01-payload.tar.gz . -C $GCOV --exclude=reset

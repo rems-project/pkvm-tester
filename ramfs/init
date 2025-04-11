@@ -60,6 +60,8 @@ echo -e "\n\e[1mStarting pKVM tester.\e[0m\n"
 
 cd payload
 
+export OCAMLRUNPARAM=b
+
 for prog in ./*; do
   if [[ -x $prog ]]; then
     echo -e "- \e[1mrunning ${prog}:\e[0m"

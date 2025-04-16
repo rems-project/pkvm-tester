@@ -19,11 +19,11 @@ $(BUILD)/efi.img: $(UEFI)
 $(BUILD)/initramfs.img: $(BUILD)/initramfs.root.img $(BUILD)/initramfs.exe.img
 	@cat $^ > $@
 
-$(BUILD)/initramfs.root.img: ramfs/*
+$(BUILD)/initramfs.root.img: ramfs/ $(wildcard ramfs/*)
 	@mkdir -p $(BUILD)
 	@(cd ramfs && find .|cpio -o -H newc)|gzip > $@
 
-$(BUILD)/initramfs.exe.img: payload/*
+$(BUILD)/initramfs.exe.img: payload/ $(wildcard payload/*)
 	@mkdir -p $(BUILD)
 	@(find payload|cpio -o -H newc)|gzip > $@
 

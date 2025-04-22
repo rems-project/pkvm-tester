@@ -40,6 +40,8 @@ function up { echo "time ${1}: $(cut -f1 -d' ' < /proc/uptime)"; }
 
 up "boot"
 
+cp /proc/config.gz /output/ || exit 1
+
 # Start the NVHE logger
 if [ -r /sys/kernel/debug/nvhe.log ]; then
   cat < /sys/kernel/debug/nvhe.log > /output/nvhe.log &

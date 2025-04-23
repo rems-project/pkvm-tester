@@ -18,8 +18,12 @@ show-usage() {
 zparseopts -D -F -E - {o,-output}:=out || show-usage
 out=${${out[2]}:-.}
 
+genhtmlargs=(
+  --branch-coverage --ignore-errors inconsistent 
+)
+
 for dir in $@; do
   for info in $dir/*.info; do
-    genhtml --branch-coverage $info -o $out/${dir:t}/${info:t:r}
+    genhtml $genhtmlargs $info -o $out/${dir:t}/${info:t:r}
   done
 done

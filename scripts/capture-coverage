@@ -9,15 +9,17 @@ set -e
 # Since the *.gcno must match the *.gcda, the build directory needs to be in the
 # same state it was when building the corresponding kernel — running make in
 # between can generate *.gcno files incompatible with the *.gcda files that the
-# kernel produces.
+# running kernel produces.
 # 
 # Usage: ${0} OUTPUT-DIR
 
 lcovargs=(
-  --gcov-tool=llvm-cov,gcov 
-  --capture --all 
-  --branch-coverage
   -q
+  --branch-coverage
+  --ignore-errors inconsistent 
+)
+lcovcap=(
+  --gcov-tool=llvm-cov,gcov 
 )
 
 eecho() { echo $@ >&2; }
@@ -32,16 +34,16 @@ gcovs=( $output/gcov-*.tar.gz(N) )
 tmp=$(mktemp -d --suff="-gcov") || exit 127
 
 for gcov in $gcovs; do
-  echo "Capturing: ${gcov:t}"
+  echo "LCOV: Capturing: ${gcov:t}"
   dir=$tmp/${gcov:t:r:r}
   mkdir $dir
   tar xf $gcov -C $dir
   links=( $dir/**/arch/arm64/**/*.c(@:A) )
   base=$(sed -e 's:/arch/arm64/.*::' <<< $links[1])
-  lcov $lcovargs -d $dir -b $base -o ${gcov:r:r}.info
+  lcov $lcovargs $lcovcap --capture --all -d $dir -b $base -o ${gcov:r:r}.info
 done
 
 [[ -d $tmp ]] && rm -rf $tmp
 
-echo "Combining: aggregate.info"
-lcov -q --branch-coverage --add-tracefile=${^gcovs:r:r}.info -o $output/gcov-99-aggregate.info
+echo "LCOV: Combining: aggregate.info"
+lcov $lcovargs --add-tracefile=${^gcovs:r:r}.info -o $output/gcov-99-aggregate.info

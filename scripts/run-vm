@@ -60,7 +60,7 @@ echo $arguments > $out/arguments
 { (( $#seed )) && echo $seed[2] || uuidgen } > $out/random.sneed
 
 make -C ${0:A:h:h} images
-qemu-system-aarch64 $arguments | tee "$out/serial"
+qemu-system-aarch64 $arguments | tee >(zstd -10 > "$out/serial.zst")
 
 (( $#ncov == 0 )) && echo && ${0:A:h}/capture-coverage $out
 

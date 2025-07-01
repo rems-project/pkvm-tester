@@ -21,11 +21,11 @@ $(BUILD)/initramfs.img: $(BUILD)/initramfs.root.img $(BUILD)/initramfs.exe.img
 
 $(BUILD)/initramfs.root.img: ramfs/*
 	@mkdir -p $(BUILD)
-	@(cd ramfs && find .|cpio -o -H newc)|gzip > $@
+	@(cd ramfs && find .|cpio -o -H newc)|zstdmt > $@
 
 $(BUILD)/initramfs.exe.img: payload/*
 	@mkdir -p $(BUILD)
-	@(find payload|cpio -o -H newc)|gzip > $@
+	@(find payload|cpio -o -H newc)|zstdmt > $@
 
 clean: 
 	@rm -f $(BUILD)/var.img $(BUILD)/efi.img $(BUILD)/initramfs*.img

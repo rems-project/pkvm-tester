@@ -36,7 +36,7 @@ set -- $(cat /proc/cmdline)
 
 ## support ##
 
-function up { echo "time ${1}: $(cut -f1 -d' ' < /proc/uptime)"; }
+function up { echo "+ time ${1}: $(cut -f1 -d' ' < /proc/uptime)"; }
 
 up "boot"
 
@@ -58,6 +58,7 @@ fi
 
 up "inits"
 
+echo -e '\n'$(uname -a)
 echo -e "\n\e[1mStarting pKVM tester.\e[0m\n"
 
 cd payload

@@ -23,9 +23,9 @@ $(BUILD)/initramfs.root.img: ramfs/*
 	@mkdir -p $(BUILD)
 	@(cd ramfs && find .|cpio -o -H newc)|zstdmt > $@
 
-$(BUILD)/initramfs.exe.img: payload/*
+$(BUILD)/initramfs.exe.img: ramfs.exe/*
 	@mkdir -p $(BUILD)
-	@(find payload|cpio -o -H newc)|zstdmt > $@
+	@(find ramfs.exe|cpio -o -H newc)|zstdmt > $@
 
 $(BUILD)/initramfs.extra.img: ramfs.extra/*
 	@mkdir -p $(BUILD)

@@ -56,12 +56,12 @@ fi
 
 timestamp "inits"
 
-## payloads ##
+## payload ##
 
 echo -e '\n'$(uname -a)
 echo -e "\n\e[1mStarting pKVM tester.\e[0m\n"
 
-cd payload
+cd ramfs.exe
 
 export OCAMLRUNPARAM=b
 
@@ -83,7 +83,7 @@ timestamp "tests"
 ## shutdown ##
 
 if [ -d $GCOV ]; then
-  tar cpzf /output/gcov-01-payload.tar.gz . -C $GCOV --exclude=reset
+  tar cpzf /output/gcov-01-exe.tar.gz . -C $GCOV --exclude=reset
 fi
 
 sync -f /output

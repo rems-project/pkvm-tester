@@ -1,4 +1,5 @@
 /_build
 /payload
+/ramfs.extra
 /output
 /Image*

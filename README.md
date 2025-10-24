@@ -47,6 +47,16 @@ If Qemu is not installed system-wide, or to use a different UEFI image, run
 Each run produces various outputs, in a subdirectory of `output`. For instance,
 the terminal output is captured as `serial`.
 
+## Additional ramfs components ##
+
+Transient, unversioned things can be added to `ramfs.extra/`. For instance, this
+is a good place to put kernel modules. In your kernel build directory, just do
+something like:
+
+```bash
+make INSTALL_MOD_PATH=<PATH-TO-HERE>/ramfs.extra modules_install
+```
+
 ## Coverage ##
 
 If the kernel was built with EL2 GCOV coverage, the raw coverage data (`.gcda`

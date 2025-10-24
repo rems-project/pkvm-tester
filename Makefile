@@ -16,7 +16,7 @@ $(BUILD)/efi.img: $(UEFI)
 	@chmod +rw $@
 	@truncate -s 64m $@
 
-$(BUILD)/initramfs.img: $(BUILD)/initramfs.root.img $(BUILD)/initramfs.exe.img
+$(BUILD)/initramfs.img: $(BUILD)/initramfs.root.img $(BUILD)/initramfs.exe.img $(BUILD)/initramfs.extra.img
 	@cat $^ > $@
 
 $(BUILD)/initramfs.root.img: ramfs/*
@@ -26,6 +26,10 @@ $(BUILD)/initramfs.root.img: ramfs/*
 $(BUILD)/initramfs.exe.img: payload/*
 	@mkdir -p $(BUILD)
 	@(find payload|cpio -o -H newc)|zstdmt > $@
+
+$(BUILD)/initramfs.extra.img: ramfs.extra/*
+	@mkdir -p $(BUILD)
+	@(cd ramfs.extra && find .|cpio -o -H newc)|zstdmt > $@
 
 clean: 
 	@rm -f $(BUILD)/var.img $(BUILD)/efi.img $(BUILD)/initramfs*.img

@@ -1,0 +1,4 @@
+#!/bin/sh
+
+modprobe pkvm_fiddler
+time cat /sys/kernel/debug/fiddle

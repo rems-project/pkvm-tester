@@ -64,7 +64,7 @@ echo $arguments > $out/arguments
 make -C ${0:A:h:h} images
 qemu-system-aarch64 $arguments | tee >(zstd -10 > "$out/serial.zst")
 
-(( $#ncov == 0 )) && echo && ${0:A:h}/capture-coverage $out
+(( $#ncov == 0 && $+commands[lcov] )) && echo && ${0:A:h}/capture-coverage $out
 
 echo
 echo -e '> \e]8;;file://'$out'\e\\'$out'\e]8;;\e\\'

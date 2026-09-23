@@ -1,7 +1,7 @@
 #!/bin/zsh
 set -e
 
-LATEST='https://github.com/rems-project/pkvm-proxy-ocaml/raw/binaries/payload.tar.zst'
+LATEST='https://github.com/rigorous-engineering/pkvm-proxy-ocaml/raw/binaries/tests.tar.zst'
 
 EXE_PATH=${0:A:h}/../ramfs.exe
 EXE_PATH=${EXE_PATH:a}
@@ -11,4 +11,4 @@ type "curl" > /dev/null || die "ERROR: please install 'curl'."
 tests=( $EXE_PATH/test_*(N) )
 (( $#tests > 0 )) && die "ERROR: refusing to overwrite tests in $EXE_PATH"
 
-curl -sL "$LATEST"|tar xvf - --zstd -C $EXE_PATH --strip-components=1
+curl -sL "$LATEST"|tar xvf - --zstd -C $EXE_PATH

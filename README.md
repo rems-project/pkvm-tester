@@ -44,8 +44,21 @@ If Qemu is not installed system-wide, or to use a different UEFI image, run
 
 ## Output ##
 
-Each run produces various outputs, in a subdirectory of `output`. For instance,
-the terminal output is captured as `serial`.
+Each run produces various outputs, in a subdirectory of `output` named
+`output/${HOST}-${TIMESTAMP}`. Outputs include:
+
+- `arguments` — the Qemu command-line used
+- `config.gz` — kernel configuration
+- `random.sneed` — a random seed for the run
+- `serial.zst` — Qemu terminal output (zstd-compressed)
+
+If the kernel is built with EL2 GCOV coverage, this also includes [LCOV] tracefiles:
+
+- `gcov-00-boot.info` — boot
+- `gcov-01-exe.info` — executable
+- `gcov-99-aggregate.info` — aggregate of everything
+
+[LCOV]: https://github.com/linux-test-project/lcov
 
 ## Additional ramfs components ##
 

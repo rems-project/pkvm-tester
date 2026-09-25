@@ -16,7 +16,7 @@ set -e
 lcovargs=(
   -q
   --branch-coverage
-  --ignore-errors inconsistent 
+  --ignore-errors inconsistent,inconsistent,unsupported
 )
 lcovcap=(
   --gcov-tool=llvm-cov,gcov 
@@ -34,7 +34,7 @@ gcovs=( $output/gcov-*.tar.gz(N) )
 tmp=$(mktemp -d --suff="-gcov") || exit 127
 
 for gcov in $gcovs; do
-  echo "LCOV: Capturing: ${gcov:t}"
+  echo "LCOV: Capturing: ${gcov}"
   dir=$tmp/${gcov:t:r:r}
   mkdir $dir
   tar xf $gcov -C $dir
@@ -45,5 +45,6 @@ done
 
 [[ -d $tmp ]] && rm -rf $tmp
 
-echo "LCOV: Combining: aggregate.info"
-lcov $lcovargs --add-tracefile=${^gcovs:r:r}.info -o $output/gcov-99-aggregate.info
+aggregate=$output/gcov-99-aggregate.info
+echo "LCOV: Combining: $aggregate"
+lcov $lcovargs --add-tracefile "${output}/*.info" -o $aggregate

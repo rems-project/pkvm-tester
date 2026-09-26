@@ -1,15 +1,24 @@
 #!/bin/zsh
 
+# priority order
 qemus=(
-  '/usr/share/qemu'
-  '/opt/homebrew/Cellar/qemu'
   "$HOME/.nix-profile/share/qemu"
   '/usr/local/share/qemu'
+  '/opt/homebrew/Cellar/qemu'
+  '/usr/share/qemu'
 )
 
-query='select(.targets[].architecture == "aarch64") |
-       select(.features|all(. != "secure-boot")) |
-       select(.mapping.device == "flash") |
-       .mapping.executable.filename'
+files=( ${^qemus}/**/firmware/*.json(N) )
+(( $#files )) || { echo "Cannot find Qemu firmware definitions."; exit 1; }
 
-jq -r $query ${^qemus}/**/firmware/*.json(N) | tail -n1
+query='
+  [ .[]|
+    select(.targets[].architecture == "aarch64") |
+    select(.mapping.device == "flash") |
+    select(.mapping.executable.format == "raw") |
+    select(.features|all(. != "secure-boot")) ] |
+  (. + [ .[] | select(.features|all(startswith("verbose")|not)) ]).[0] |
+  .mapping.executable.filename
+'
+
+jq -sr $query $files

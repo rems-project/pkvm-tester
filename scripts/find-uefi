@@ -2,7 +2,7 @@
 
 # priority order
 qemus=(
-  "$HOME/.nix-profile/share/qemu"
+  "${^=NIX_PROFILES:-/INVALID}/share/qemu"
   '/usr/local/share/qemu'
   '/opt/homebrew/Cellar/qemu'
   '/usr/share/qemu'
